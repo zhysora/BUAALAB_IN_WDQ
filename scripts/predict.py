@@ -16,48 +16,17 @@ from local.gae.train import gae_for_na
 from keras.models import Model, model_from_json
 import numpy as np
 
-def process_by_name(pubs_dict):
+def process_by_name(pids):
     ### preprocessing
-    print('n_papers: ', len(pubs_dict)) 
-    
-    wf = codecs.open(join(settings.GLOBAL_DATA_DIR, 'author_features.txt'), 'w', encoding='utf-8')
-    pids = []
-
-    for paper in pubs_dict:
-        if "title" not in paper or "authors" not in paper:
-            continue
-        
-        pids.append(paper['id'])
-        title_features, keywords_features, venue_features, abst_features, fields_features = feature_utils.extract_common_features(paper)
-        name_feature = []
-        org_features = []
-        for coauthor in paper["authors"]:
-            coauthor_name = coauthor.get("name", "")
-            coauthor_org = string_utils.clean_name(coauthor.get("org", ""))
-            if len(coauthor_name) > 2: 
-                name_feature.extend(
-                    feature_utils.transform_feature([string_utils.clean_name(coauthor_name)], "name")
-                )
-            if len(coauthor_org) > 2:
-                org_features.extend(
-                    feature_utils.transform_feature(string_utils.clean_sentence(coauthor_org.lower()), "org")
-                )
-        author_feature = name_feature + org_features + title_features + keywords_features + venue_features + abst_features + fields_features
-
-        aid = paper['id']
-        wf.write(aid + '\t' + ' '.join(author_feature) + '\n')
-    wf.close()
-
-    dump_author_features_to_cache()
-    emb_model = EmbeddingModel.Instance()
-    emb_model.train('aminer')
-    cal_feature_idf()
-    dump_author_embs()
+    print('n_papers: ', len(pids)) 
+    if len(pids) < 10:
+        print("too few parpers, continue...")
+        return
 
     ### prepare_local_data
     IDF_THRESHOLD = 32
     dump_inter_emb(pids)
-    gen_local_data(idf_threshold=IDF_THRESHOLD, pids=pids)
+    gen_local_data(idf_threshold=IDF_THRESHOLD, pids=pids, labels=None)
 
     ### count_size
     LMDB_NAME = "author_100.emb.weighted" #(pid-j, x^-)
@@ -80,6 +49,7 @@ def process_by_name(pubs_dict):
     loaded_model.load_weights(join(model_dir, 'model-count.h5')) # 加载模型 权重
     
     kk = loaded_model.predict(test_x)
+    print('num_pred:', kk)
 
     ### local\gae\train
     ret = gae_for_na('Name', int(kk[0][0]))
@@ -102,16 +72,22 @@ if __name__ == '__main__':
     tot_pub = 0
     tot_aid = 0
 
-    test_pubs_dict = data_utils.load_json(settings.GLOBAL_DATA_DIR, 'test_pubs_raw.json')
+    test_pubs_dict = data_utils.load_json(settings.GLOBAL_DATA_DIR, 'name_to_pubs_test_100.json')
     for name in test_pubs_dict:
         tot_aid = tot_aid + 1
         tot_pub = tot_pub + len(test_pubs_dict[name])
-        rem_dir(join(settings.DATA_DIR, 'emb'))
-        rem_dir(join(settings.DATA_DIR, 'lmdb'))
+        # rem_dir(join(settings.DATA_DIR, 'emb'))
+        # rem_dir(join(settings.DATA_DIR, 'lmdb'))
         
-        ret = process_by_name(test_pubs_dict[name])
-        print(ret)
-    
+        pubs = []
+        for aid in test_pubs_dict[name]:
+            for pub in test_pubs_dict[name][aid]:
+                pubs.append(pub)
+
+        process_by_name(pubs)
+
+        #break
+
     print('finish all')
     print('time:', datetime.now()-start_time)
     print('tot pusbs:', tot_pub)

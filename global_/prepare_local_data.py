@@ -27,6 +27,7 @@ def dump_inter_emb(pids): # 从训练的全局模型中 取出 隐藏层， 给�
     for pid in pids:
         cur_emb = lc_input.get(pid)
         if cur_emb is None:
+            print("ERROR: not found embedding x for pid:%s\n"%(pid))
             continue
         embs_input.append(cur_emb)
     embs_input = np.stack(embs_input)
@@ -61,7 +62,7 @@ def dump_inter_emb(pids): # 从训练的全局模型中 取出 隐藏层， 给�
             lc_inter.set(pid_, inter_embs[i]) # 写入到数据库 author_triplets.emb中  (pid-j, y) '''
 
 
-def gen_local_data(pids, idf_threshold=10): # 对每一个作者名， 生成局部数据， 包括文档特征 与 文档网络； 输入参数是阀值， 也就是相似度高于多少才连边
+def gen_local_data(pids, labels, idf_threshold=10): # 对每一个作者名， 生成局部数据， 包括文档特征 与 文档网络； 输入参数是阀值， 也就是相似度高于多少才连边
     """
     generate local data (including paper features and paper network) for each associated name
     :param idf_threshold: threshold for determining whether there exists an edge between two papers (for this demo we set 29)
@@ -79,13 +80,16 @@ def gen_local_data(pids, idf_threshold=10): # 对每一个作者名， 生成局
     wf_content = open(join(graph_dir, '{}_pubs_content.txt'.format(name)), 'w')
     shuffle(pids) # 打乱
     
-    for pid in pids:
+    for i, pid in enumerate(pids):
         cur_pub_emb = lc_inter.get(pid) # 获得文档嵌入 y
         if cur_pub_emb is not None:
             cur_pub_emb = list(map(str, cur_pub_emb)) #把cur_pub_emb 转换成字符串 表达
             wf_content.write('{}\t'.format(pid)) # 文档id
             wf_content.write('\t'.join(cur_pub_emb)) # 嵌入 y
-            wf_content.write('\t{}\n'.format(pid)) # 作者id
+            wf_content.write('\t{}\n'.format(pid)) # pid
+        else:
+            print("ERROR: not found embedding y for pid:%s\n"%(pid))
+
     wf_content.close() # pid-j, y, aid
 
     # generate network

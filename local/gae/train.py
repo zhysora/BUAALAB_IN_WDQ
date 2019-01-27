@@ -141,11 +141,14 @@ def gae_for_na(name, n_clusters): # 对一个具体的姓名预测其消歧结�
 
     emb = get_embs() # 经过 编码器后 的 嵌入层
     ''' n_clusters = int(name_to_ncluster.get(name, 0))
-    #n_clusters = len(set(labels))# 直接获得 真实的 聚类大小
+    n_clusters = len(set(labels))# 直接获得 真实的 聚类大小
     if n_clusters == 1:
         return None, None, None, None '''
+    #n_clusters = len(set(labels))# 直接获得 真实的 聚类大小
     emb_norm = normalize_vectors(emb)# 标准化 嵌入层
     clusters_pred = clustering(emb_norm, num_clusters=max(n_clusters,1)) # 聚类， 嵌入集 与 聚类大小
+
+    print('clusters_pred: ', clusters_pred)
 
     ret = {}
     for i, pred_label in enumerate(clusters_pred):

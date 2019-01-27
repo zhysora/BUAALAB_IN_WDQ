@@ -28,11 +28,7 @@ def load_local_data(path=local_na_dir, name='cheng_cheng'): #加载本地数据 
     edges_unordered = np.genfromtxt(join(path, "{}_pubs_network.txt".format(name)), dtype=np.dtype(str)) # name的网络文件 (pid-j, pid-j)
     edges = np.array(list(map(idx_map.get, edges_unordered.flatten())), # 扁平化展开后， 在map中找到 对应离散化 id 形成lst
                      dtype=np.int32).reshape(edges_unordered.shape) # 再reshape成 2维数组 和原来edges_unordered的shape 一致  (i, j)
-    ''' if name == 'guang yang':
-        print(edges.shape[0])
-        edges = edges[np.newaxis, :]
-        print((edges[:, 0], edges[:, 1]))
-        print((features.shape[0], features.shape[0])) '''
+
     if edges.shape == (2, ):
         edges = edges[np.newaxis, :]
 
