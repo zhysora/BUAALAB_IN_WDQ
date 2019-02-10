@@ -120,7 +120,7 @@ def run_rnn(k=300, seed=1106):
                 print(pid)
     model = create_model()
     # print(model.summary())
-    model.fit_generator(gen_train(clusters, k=300, batch_size=100, min=1, max=300), steps_per_epoch=1, epochs=1)
+    model.fit_generator(gen_train(clusters, k=300, batch_size=1000, min=1, max=300), steps_per_epoch=100, epochs=1000)
     ''' model.fit_generator(gen_train(clusters, k=300, batch_size=1000), steps_per_epoch=100, epochs=1000,
                         validation_data=(test_x, test_y)) # fit_generator 是一种节省内存 的训练方式 '''
     model_json = model.to_json() # 将模型结构 保存为json
