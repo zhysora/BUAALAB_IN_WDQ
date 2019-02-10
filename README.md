@@ -22,7 +22,6 @@ python scripts/preprocessing.py
 python global_/gen_train_data.py
 python global_/global_model.py
 python cluster_size/count.py
-python scripts/predict.py 
 
 # prediction part
 python scripts/predict.py
